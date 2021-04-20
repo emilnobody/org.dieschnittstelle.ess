@@ -4,6 +4,8 @@ package org.dieschnittstelle.ess.basics;
 import org.dieschnittstelle.ess.basics.annotations.AnnotatedStockItemBuilder;
 import org.dieschnittstelle.ess.basics.annotations.StockItemProxyImpl;
 
+import java.lang.reflect.Field;
+
 import static org.dieschnittstelle.ess.utils.Utils.*;
 
 public class ShowAnnotations {
@@ -29,10 +31,20 @@ public class ShowAnnotations {
 	 * TODO BAS2
 	 */
 	private static void showAttributes(Object consumable) {
+		//TODO get the klass from the consumable instance
+		Class klass = consumable.getClass();
 		show("class is: " + consumable.getClass());
-
-		// TODO BAS2: create a string representation of consumable by iterating
-		//  over the object's attributes / fields as provided by its class
+		// TODO BAS2: create a string representation of consumable
+		String klassName =  consumable.getClass().getSimpleName();//  the simple name of the class
+		show("The class as a string representation/classname is: " + consumable.getClass().getSimpleName());
+		//TODO all Declared Fields as ( attributes ) as Field array
+		Field[] fields = klass.getDeclaredFields();
+		String chain= "";
+		//  by iterating over the object's attributes / fields as provided by its class
+		for (int i = 0; i < fields.length;i++){
+			String fieldName = fields[i].getName();
+			//TODO
+		}
 		//  and reading out the attribute values. The string representation
 		//  will then be built from the field names and field values.
 		//  Note that only read-access to fields via getters or direct access
