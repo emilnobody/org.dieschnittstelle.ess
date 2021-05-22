@@ -10,10 +10,12 @@ import java.util.concurrent.Future;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.Logger;
 import org.dieschnittstelle.ess.entities.crm.AbstractTouchpoint;
 import org.dieschnittstelle.ess.entities.crm.Address;
@@ -147,19 +149,16 @@ public class ShowTouchpointService {
 			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
 
 				// try to read out an object from the response entity
-				ObjectInputStream ois = new ObjectInputStream(response
-						.getEntity().getContent());
+				ObjectInputStream ois = new ObjectInputStream(response.getEntity().getContent());
 
-				List<AbstractTouchpoint> touchpoints = (List<AbstractTouchpoint>) ois
-						.readObject();
+				List<AbstractTouchpoint> touchpoints = (List<AbstractTouchpoint>) ois.readObject();
 
 				logger.info("read touchpoints: " + touchpoints);
 
 				return touchpoints;
 
 			} else {
-				String err = "could not successfully execute request. Got status code: "
-						+ response.getStatusLine().getStatusCode();
+				String err = "could not successfully execute request. Got status code: " + response.getStatusLine().getStatusCode();
 				logger.error(err);
 				throw new RuntimeException(err);
 			}
@@ -178,11 +177,42 @@ public class ShowTouchpointService {
 	 */
 	public void deleteTouchpoint(AbstractTouchpoint tp) {
 		logger.info("deleteTouchpoint(): will delete: " + tp);
-
+		logger.info("with the ID :" + tp.getId());
+		Long tpID = tp.getId();
 		createClient();
 
 		logger.debug("client running: {}",client.isRunning());
+		try {
+			boolean async = false;
+			//       TODO 1. Nutzen Sie für den HTTP Request, der durch den Client übermittelt wird, die HTTP DELETE
+			//        Methode.
+			//       TODO 2. Wählen Sie für eine in Verbindung mit der genutzten HTTP Methode möglichst wenig redundante
+			//        URI.
+			HttpDelete deleteRequest = new HttpDelete("http://localhost:8080/api/" + (async ? "async/touchpoints/" + tpID : "touchpoints/" + tpID));
+			//       TODO 3. Nutzen Sie zur server-seitigen Ausführung des Löschens die Methode deleteTouchpoint()
+//        auf TouchpointCRUDExecutor.
+			show("HttpDelete deleteRequest %s", deleteRequest);
+			show("HttpDelete deleteRequest get Method: %s", deleteRequest.getMethod());
+			Future<HttpResponse> responseFuture = client.execute(deleteRequest, null);
+			show(" Delete responseFuture %s", responseFuture.toString());
+			HttpResponse response = responseFuture.get();
+			//       TODO  4. Zeigen Sie dem Client die erfolgreiche Ausführung des Löschens bzw. etwaige Fehler durch
+//        geeignete Status Codes im HTTP Response an.
+//       TODO 5. Testen Sie Ihre Implementierung durch Ausführen von ShowTouchpointService.
 
+			show(" Delete HttpResponse response StatusCode: %s ", response.getStatusLine().getStatusCode());
+			if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+				show(" Delete HttpResponse response: %s ", response);
+				// once you have received a response this is necessary to be able to
+				// use the client for subsequent requests:
+
+				EntityUtils.consume(response.getEntity());
+			}
+
+		} catch (Exception e) {
+			logger.error("got exception: " + e, e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
